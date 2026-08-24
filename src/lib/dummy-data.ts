@@ -9,7 +9,7 @@ export const recentActivity = [
   {
     id: "1",
     customer: "Priya Sharma",
-    amount: 4999,
+    amount: 500000,
     failureReason: "INSUFFICIENT_FUNDS",
     recoveryScore: 82,
     aiRecommendation: "RETRY",

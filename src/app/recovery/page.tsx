@@ -1,5 +1,6 @@
 import { getRecoveryCasesWithDetails } from "@/lib/queries";
 import { getOrCreateAIDecision } from "@/lib/recovery-actions";
+import { evaluatePolicy } from "@/lib/policy-engine";
 
 const actionStyles: Record<string, string> = {
   RETRY: "bg-indigo-50 text-indigo-700 border-indigo-200",
@@ -8,13 +9,30 @@ const actionStyles: Record<string, string> = {
   STOP: "bg-red-50 text-red-700 border-red-200",
 };
 
+const outcomeStyles: Record<string, string> = {
+  ALLOWED: "bg-emerald-50 text-emerald-700",
+  REQUIRES_APPROVAL: "bg-amber-50 text-amber-700",
+  BLOCKED: "bg-red-50 text-red-700",
+};
+
 export default async function RecoveryCenterPage() {
   const cases = await getRecoveryCasesWithDetails();
 
   const casesWithDecisions = await Promise.all(
     cases.map(async (recoveryCase: any) => {
       const decision = await getOrCreateAIDecision(recoveryCase);
-      return { ...recoveryCase, decision };
+
+      let policyResult = null;
+      if (decision) {
+        policyResult = evaluatePolicy({
+          action: decision.action,
+          amount: Number(recoveryCase.payments?.amount),
+          retryCount: recoveryCase.retry_count,
+          caseStatus: recoveryCase.status,
+        });
+      }
+
+      return { ...recoveryCase, decision, policyResult };
     })
   );
 
@@ -23,7 +41,7 @@ export default async function RecoveryCenterPage() {
       <div>
         <h2 className="text-2xl font-bold text-slate-900">Recovery Center</h2>
         <p className="text-sm text-slate-500 mt-1">
-          AI-analyzed recovery cases with reasoning and confidence
+          AI-analyzed recovery cases with reasoning and policy validation
         </p>
       </div>
 
@@ -32,6 +50,7 @@ export default async function RecoveryCenterPage() {
           const payment = item.payments;
           const customer = payment?.customers;
           const decision = item.decision;
+          const policy = item.policyResult;
 
           return (
             <div
@@ -53,17 +72,35 @@ export default async function RecoveryCenterPage() {
 
               {decision ? (
                 <div className="mt-4 pt-4 border-t border-slate-100">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <span
                       className={`px-3 py-1 rounded-md text-xs font-semibold border ${actionStyles[decision.action]}`}
                     >
-                      {decision.action}
+                      AI recommends: {decision.action}
                     </span>
                     <span className="text-xs text-slate-500">
                       Confidence: {decision.confidence}%
                     </span>
                   </div>
                   <p className="text-sm text-slate-600 mt-2">{decision.ai_reason}</p>
+
+                  {policy && (
+                    <div className="mt-3 pt-3 border-t border-slate-100">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span
+                          className={`px-3 py-1 rounded-md text-xs font-semibold ${outcomeStyles[policy.outcome]}`}
+                        >
+                          Policy: {policy.outcome}
+                        </span>
+                        {policy.finalAction !== decision.action && (
+                          <span className="text-xs text-slate-500">
+                            Final action: {policy.finalAction}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">{policy.reason}</p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-red-500 mt-4">

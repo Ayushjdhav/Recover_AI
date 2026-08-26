@@ -60,4 +60,38 @@ export async function getRecoveryCasesWithDetails() {
   }
 
   return data;
+}export async function getAuditTrail() {
+  const { data, error } = await supabase
+    .from("recovery_actions")
+    .select(
+      `
+      id,
+      action,
+      ai_reason,
+      confidence,
+      status,
+      executed_at,
+      recovery_cases (
+        id,
+        recovery_score,
+        status,
+        created_at,
+        payments (
+          amount,
+          failure_reason,
+          customers (
+            name
+          )
+        )
+      )
+    `
+    )
+    .order("id", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching audit trail:", error);
+    return [];
+  }
+
+  return data;
 }

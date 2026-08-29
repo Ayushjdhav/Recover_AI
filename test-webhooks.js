@@ -7,8 +7,8 @@ const payload = {
   payload: {
     payment: {
       entity: {
-        id: "pay_test_simulated_001",
-        amount: 599900,
+        id: "pay_test_simulated_003",
+        amount: 1499900,
         currency: "INR",
         email: "testcustomer@example.com",
         error_reason: "INSUFFICIENT_FUNDS",

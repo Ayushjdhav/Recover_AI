@@ -3,6 +3,8 @@ import { getOrCreateAIDecision } from "@/lib/recovery-actions";
 import { evaluatePolicy } from "@/lib/policy-engine";
 import ApprovalButtons from "@/components/recovery/ApprovalButtons";
 
+export const dynamic = "force-dynamic";
+
 const actionStyles: Record<string, string> = {
   RETRY: "bg-indigo-50 text-indigo-700 border-indigo-200",
   REMIND: "bg-blue-50 text-blue-700 border-blue-200",

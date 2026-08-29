@@ -1,6 +1,7 @@
 import { getRecoveryCasesWithDetails } from "@/lib/queries";
 import { getOrCreateAIDecision } from "@/lib/recovery-actions";
 import { evaluatePolicy } from "@/lib/policy-engine";
+import ApprovalButtons from "@/components/recovery/ApprovalButtons";
 
 const actionStyles: Record<string, string> = {
   RETRY: "bg-indigo-50 text-indigo-700 border-indigo-200",
@@ -86,19 +87,28 @@ export default async function RecoveryCenterPage() {
 
                   {policy && (
                     <div className="mt-3 pt-3 border-t border-slate-100">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span
-                          className={`px-3 py-1 rounded-md text-xs font-semibold ${outcomeStyles[policy.outcome]}`}
-                        >
-                          Policy: {policy.outcome}
-                        </span>
-                        {policy.finalAction !== decision.action && (
-                          <span className="text-xs text-slate-500">
-                            Final action: {policy.finalAction}
-                          </span>
-                        )}
+                      <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <span
+                              className={`px-3 py-1 rounded-md text-xs font-semibold ${outcomeStyles[policy.outcome]}`}
+                            >
+                              Policy: {policy.outcome}
+                            </span>
+                            {policy.finalAction !== decision.action && (
+                              <span className="text-xs text-slate-500">
+                                Final action: {policy.finalAction}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">{policy.reason}</p>
+                        </div>
+
+                        {policy.outcome === "REQUIRES_APPROVAL" &&
+                          decision.status === "PENDING" && (
+                            <ApprovalButtons actionId={decision.id} caseId={item.id} />
+                          )}
                       </div>
-                      <p className="text-xs text-slate-500 mt-1">{policy.reason}</p>
                     </div>
                   )}
                 </div>
